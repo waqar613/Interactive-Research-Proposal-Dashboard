@@ -1,0 +1,16 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Document Exports
+*.docx
+final_research_proposal.docx
+
+# IDE files
+.vscode/
+.idea/

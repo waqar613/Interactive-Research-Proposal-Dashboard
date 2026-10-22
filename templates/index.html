@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Research Pipeline Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 340px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], select {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #0f172a;
+            font-weight: bold;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-export {
+            background: var(--success);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .agent-msg-box {
+            background: #0b1329;
+            border: 1px solid var(--accent);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            line-height: 1.4;
+            display: none;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            background: #334155;
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .output-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-card h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+
+        .section-card p {
+            line-height: 1.6;
+            color: #cbd5e1;
+            white-space: pre-line;
+        }
+
+        .section-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .loader {
+            display: none;
+            color: var(--accent);
+            font-size: 0.9rem;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>🔬 Research Agent</h2>
+        
+        <div class="input-group">
+            <label for="topic">1. Research Topic / Title</label>
+            <input type="text" id="topic" placeholder="e.g. Explainable ML in Healthcare">
+        </div>
+
+        <div class="input-group">
+            <label for="heading">2. Select Section to Write</label>
+            <select id="heading">
+                <option value="" disabled selected>-- Choose Section --</option>
+                <option value="Article">1. Article</option>
+                <option value="Abstract">2. Abstract</option>
+                <option value="Introduction">3. Introduction</option>
+                <option value="Literature Review">4. Literature Review</option>
+                <option value="Research Methodology">5. Research Methodology</option>
+                <option value="Ethical Considerations">6. Ethical Considerations</option>
+                <option value="Expected Contributions">7. Expected Contributions</option>
+                <option value="Timeline">8. Timeline</option>
+                <option value="Budget (if applicable)">9. Budget (if applicable)</option>
+                <option value="References">10. References</option>
+                <option value="Appendices (if applicable)">11. Appendices (if applicable)</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="generateSection()">⚡ Generate Section</button>
+
+        <div class="loader" id="loader">
+            <span>⏳ Agent searching & writing... Please wait.</span>
+        </div>
+
+        <div class="agent-msg-box" id="agentMsgBox">
+            💬 Section successfully generated! Please select another option or finish to download your file.
+        </div>
+
+        <button class="btn btn-export" onclick="exportDocx()">📥 Download Word Document (.docx)</button>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1 id="doc-title">Interactive Research Pipeline</h1>
+            <span class="status-badge" id="status">Status: Idle</span>
+        </div>
+
+        <div class="output-container" id="output-container">
+        </div>
+    </div>
+
+    <script>
+        async function generateSection() {
+            const topic = document.getElementById('topic').value.trim();
+            const headingSelect = document.getElementById('heading');
+            const heading = headingSelect.value;
+            const loader = document.getElementById('loader');
+            const status = document.getElementById('status');
+            const msgBox = document.getElementById('agentMsgBox');
+
+            if (!topic || !heading) {
+                alert('Please enter a research topic and select a section from the dropdown!');
+                return;
+            }
+
+            loader.style.display = 'flex';
+            msgBox.style.display = 'none';
+            status.innerText = 'Status: Agent working...';
+
+            try {
+                const response = await fetch('/api/generate-section', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, heading })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    appendSectionCard(data.heading, data.content);
+                    status.innerText = 'Status: Ready for next option';
+                    
+                    // Remove selected option from dropdown
+                    headingSelect.remove(headingSelect.selectedIndex);
+                    headingSelect.selectedIndex = 0;
+
+                    // Show English message inside agent UI
+                    msgBox.style.display = 'block';
+                } else {
+                    alert('Error: ' + data.error);
+                    status.innerText = 'Status: Error Occurred';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to connect to the server.');
+                status.innerText = 'Status: Connection Error';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function appendSectionCard(heading, content) {
+            const container = document.getElementById('output-container');
+            const card = document.createElement('div');
+            card.className = 'section-card';
+            
+            const h3 = document.createElement('h3');
+            h3.innerText = heading;
+            
+            const p = document.createElement('p');
+            p.innerText = content;
+            
+            card.appendChild(h3);
+            card.appendChild(p);
+            container.appendChild(card);
+        }
+
+        async function exportDocx() {
+            try {
+                const response = await fetch('/api/export-docx', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'final_research_proposal.docx';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to export document.');
+            }
+        }
+    </script>
+</body>
+</html>
